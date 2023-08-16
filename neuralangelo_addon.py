@@ -1,24 +1,3 @@
-import collections
-import json
-import os
-import shutil
-import struct
-
-import bmesh
-import bpy
-import math
-import numpy as np
-from bpy.props import (StringProperty,
-                       BoolProperty,
-                       FloatProperty,
-                       FloatVectorProperty,
-                       PointerProperty,
-                       )
-from bpy.types import (Operator,
-                       PropertyGroup,
-                       )
-from mathutils import Matrix
-from typing import Union
 
 # ------------------------------------------------------------------------
 #    COLMAP code: https://github.com/colmap/colmap/blob/dev/scripts/python/read_write_model.py
@@ -909,9 +888,13 @@ def load_camera(colmap_data, context):
 
     # Load colmap data
     intrinsic_param = np.array([camera.params for camera in colmap_data['cameras'].values()])
-    intrinsic_matrix = np.array([[intrinsic_param[0][0], 0, intrinsic_param[0][2]],
-                                 [0, intrinsic_param[0][1], intrinsic_param[0][3]],
+    # TODO: only supports simple pinhole camera for now
+    intrinsic_matrix = np.array([[intrinsic_param[0][0], 0, intrinsic_param[0][1]],
+                                 [0, intrinsic_param[0][0], intrinsic_param[0][2]],
                                  [0, 0, 1]])  # TODO: only supports single camera for now
+    # intrinsic_matrix = np.array([[intrinsic_param[0][0], 0, intrinsic_param[0][2]],
+    #                              [0, intrinsic_param[0][1], intrinsic_param[0][3]],
+    #                              [0, 0, 1]])  # TODO: only supports single camera for now
 
     image_width = np.array([camera.width for camera in colmap_data['cameras'].values()])
     image_height = np.array([camera.height for camera in colmap_data['cameras'].values()])
@@ -927,7 +910,7 @@ def load_camera(colmap_data, context):
 
     # Load image file
     sort_image_id = np.argsort(image_names)
-    image_folder_path = bpy.path.abspath(bpy.context.scene.my_tool.colmap_path + 'images/')
+    image_folder_path = bpy.path.abspath(bpy.context.scene.my_tool.colmap_path)
 
     ## make a copy of images to comply with the continuous numbering requirement of sequence
     blender_img_path = bpy.context.scene.my_tool.colmap_path + 'blender_images/'
@@ -1069,7 +1052,7 @@ class LoadCOLMAP(Operator):
             bpy.data.curves.remove(curve, do_unlink=True)
 
         # load data
-        cameras, images, points3D = read_model(bpy.path.abspath(mytool.colmap_path + 'sparse/'), ext='.bin')
+        cameras, images, points3D = read_model(bpy.path.abspath(mytool.colmap_path), ext='.bin')
         display_pointcloud(points3D)
 
         global colmap_data, point_cloud_vertices
@@ -1320,10 +1303,15 @@ class ExportSceneParameters(Operator):
     def execute(self, context):
         global radius, center, colmap_data, bounding_box
         intrinsic_param = np.array([camera.params for camera in colmap_data['cameras'].values()])
+        # TODO: only supports simple pinhole camera for now
+        # fl_x = intrinsic_param[0][0]  # TODO: only supports single camera for now
+        # fl_y = intrinsic_param[0][1]
+        # cx = intrinsic_param[0][2]
+        # cy = intrinsic_param[0][3]
         fl_x = intrinsic_param[0][0]  # TODO: only supports single camera for now
-        fl_y = intrinsic_param[0][1]
-        cx = intrinsic_param[0][2]
-        cy = intrinsic_param[0][3]
+        fl_y = intrinsic_param[0][0]
+        cx = intrinsic_param[0][1]
+        cy = intrinsic_param[0][2]
         image_width = np.array([camera.width for camera in colmap_data['cameras'].values()])
         image_height = np.array([camera.height for camera in colmap_data['cameras'].values()])
         w = image_width[0]
