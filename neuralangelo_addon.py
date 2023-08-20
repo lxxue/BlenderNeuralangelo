@@ -1,4 +1,26 @@
 
+import collections
+import json
+import os
+import shutil
+import struct
+
+import bmesh
+import bpy
+import math
+import numpy as np
+from bpy.props import (StringProperty,
+                       BoolProperty,
+                       FloatProperty,
+                       FloatVectorProperty,
+                       PointerProperty,
+                       )
+from bpy.types import (Operator,
+                       PropertyGroup,
+                       )
+from mathutils import Matrix
+from typing import Union
+
 # ------------------------------------------------------------------------
 #    COLMAP code: https://github.com/colmap/colmap/blob/dev/scripts/python/read_write_model.py
 # ------------------------------------------------------------------------
